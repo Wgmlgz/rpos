@@ -4,6 +4,7 @@ import { Stream } from "stream";
 import { v4l2ctl } from "./v4l2ctl";
 import net = require('net');
 import { setImmediate } from "timers";
+import VirtualPtzDriver = require("./VirtualPtzDriver");
 import events = require("events");
 
 /*
@@ -230,6 +231,9 @@ class PTZDriver {
 
     if (config.PTZDriver === 'rposascii') {
       this.rposAscii = true;
+
+      this.stream = new VirtualPtzDriver();
+
       this.supportsAbsolutePTZ = true;
       this.supportsRelativePTZ = true;
       this.supportsContinuousPTZ = true;
