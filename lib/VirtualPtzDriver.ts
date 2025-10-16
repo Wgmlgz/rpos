@@ -1,5 +1,7 @@
 /// <reference path="../rpos.d.ts"/>
 
+import { PtzCommand } from './ptzTypes';
+
 /*
 VirtualPtzDriver: parses RPOS ASCII PTZ lines written by PTZDriver into typed objects
 and logs them. It implements a minimal write(data) API that PTZDriver uses as an output stream.
@@ -21,24 +23,12 @@ ASCII format (TAB separated, LF terminated):
   focusstop
 */
 
-type PtzCommand =
-  | { type: 'gotohome' }
-  | { type: 'sethome' }
-  | { type: 'gotopreset'; presetName: string; presetValue: string }
-  | { type: 'setpreset'; presetName: string; presetValue: string }
-  | { type: 'clearpreset'; presetName: string; presetValue: string }
-  | { type: 'aux'; name: string }
-  | { type: 'relayactive'; name: string }
-  | { type: 'relayinactive'; name: string }
-  | { type: 'ptz'; pan: number; tilt: number; zoom: number }
-  | { type: 'absolute-ptz'; pan: number; tilt: number; zoom: number }
-  | { type: 'relative-ptz'; pan: number; tilt: number; zoom: number }
-  | { type: 'brightness'; value: number }
-  | { type: 'focus'; value: number }
-  | { type: 'focusstop' }
-  | { type: 'unknown'; raw: string };
-
 class VirtualPtzDriver {
+  private onCommand?: (cmd: PtzCommand) => void;
+
+  constructor(onCommand?: (cmd: PtzCommand) => void) {
+    this.onCommand = onCommand;
+  }
   write(data: string|Buffer) {
     const line = Buffer.isBuffer(data) ? data.toString() : String(data);
     // PTZDriver writes with trailing \n; split just in case multiple lines are batched
@@ -46,6 +36,9 @@ class VirtualPtzDriver {
     for (const ln of lines) {
       const parsed = this.parseLine(ln);
       console.log('[VirtualPtzDriver]', parsed);
+      if (this.onCommand) {
+        try { this.onCommand(parsed); } catch (e) { /* swallow */ }
+      }
     }
   }
 

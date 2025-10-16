@@ -21,15 +21,17 @@
     "body-parser": "1.19.0",
     "cli-color": "2.0.0",
     "express": "^4.17.1",
+    "grandiose": "^0.0.4",
     "ip": "^1.1.5",
     "macos-release": "~2.0.0",
     "node-pelcod": "^0.3.0",
     "node-uuid": "1.4.8",
     "pan-tilt-hat": "^1.2.1",
     "rpi-version": "^1.4.3",
-    "serialport": "^9.1.0",
     "soap": "https://github.com/BreeeZe/node-soap.git",
+    "socket.io": "^4.8.1",
     "tenx-usb-missile-launcher-driver": "^0.2.0",
+    "ws": "^8.18.3",
     "xml2js": "0.4.23"
   },
   "devDependencies": {

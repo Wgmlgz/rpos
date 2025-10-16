@@ -5,6 +5,7 @@ import { v4l2ctl } from "./v4l2ctl";
 import net = require('net');
 import { setImmediate } from "timers";
 import VirtualPtzDriver = require("./VirtualPtzDriver");
+import NDIPtzController = require("./NDIPtzController");
 import events = require("events");
 
 /*
@@ -185,25 +186,6 @@ class PTZDriver {
     }
 
 
-    // Open the OUTPUT STREAM
-    if (PTZOutput === 'serial') {
-      var SerialPort = require('serialport');
-      this.serialPort = new SerialPort(config.PTZSerialPort, 
-        {
-        baudRate: config.PTZSerialPortSettings.baudRate,
-        parity:   config.PTZSerialPortSettings.parity,
-        dataBits: config.PTZSerialPortSettings.dataBits,
-        stopBits: config.PTZSerialPortSettings.stopBits,
-        }
-      );
- 
-      this.stream = this.serialPort.on("open", function(err){
-          if (err) {
-            console.log('Error: '+err);
-            return;
-          }
-      });
-    }
 
     if (PTZOutput === 'tcp') {
       let host = config.PTZOutputURL.split(':')[0];
@@ -231,9 +213,8 @@ class PTZDriver {
 
     if (config.PTZDriver === 'rposascii') {
       this.rposAscii = true;
-
-      this.stream = new VirtualPtzDriver();
-
+      const ndi = new NDIPtzController();
+      this.stream = new VirtualPtzDriver((cmd) => ndi.handleCommand(cmd));
       this.supportsAbsolutePTZ = true;
       this.supportsRelativePTZ = true;
       this.supportsContinuousPTZ = true;
@@ -283,6 +264,7 @@ class PTZDriver {
 // class and not to the caller's 'this'. This is required when process_ptz_command
 // is used in a callback function.
   process_ptz_command = (command: string, data: any) => {
+    console.log(data)
     if (command==='gotohome') {
       console.log("Goto Home");
       if (this.rposAscii) this.stream.write(command + '\n');
