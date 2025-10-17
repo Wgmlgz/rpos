@@ -81,6 +81,13 @@ class PTZService extends SoapService {
             Max : 1.0
           }
         }];
+      node.SupportedPTZSpaces['AbsoluteZoomPositionSpace'] = [{
+          URI : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/PositionGenericSpace',
+          XRange : { 
+            Min : 0,
+            Max : 1.0
+          },
+        }];
     }
     if (this.ptz_driver.supportsRelativePTZ) {
       node.SupportedPTZSpaces['RelativePanTiltTranslationSpace'] = [{
