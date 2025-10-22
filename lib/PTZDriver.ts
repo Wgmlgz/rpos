@@ -5,7 +5,7 @@ import { v4l2ctl } from "./v4l2ctl";
 import net = require('net');
 import { setImmediate } from "timers";
 import VirtualPtzDriver = require("./VirtualPtzDriver");
-import NDIPtzController = require("./NDIPtzController");
+import UnrealController = require("./NDIPtzController");
 import events = require("events");
 
 /*
@@ -103,7 +103,6 @@ class ReconnectingStream extends events.EventEmitter {
   hostname: string;
   port: number|string;
   stream: any = null; // the currently open network socket
-
   constructor() {
     super();
   }
@@ -169,6 +168,7 @@ class PTZDriver {
   supportsContinuousPTZ: boolean = false;
   supportsGoToHome: boolean = false;
   hasFixedHomePosition: boolean = true;
+  unrealController: UnrealController
 
   constructor(config: rposConfig) {
     this.config = config;
@@ -213,8 +213,8 @@ class PTZDriver {
 
     if (config.PTZDriver === 'rposascii') {
       this.rposAscii = true;
-      const ndi = new NDIPtzController();
-      this.stream = new VirtualPtzDriver((cmd) => ndi.handleCommand(cmd));
+      this.unrealController = new UnrealController();
+      this.stream = new VirtualPtzDriver((cmd) => this.unrealController.handleCommand(cmd));
       this.supportsAbsolutePTZ = true;
       this.supportsRelativePTZ = true;
       this.supportsContinuousPTZ = true;

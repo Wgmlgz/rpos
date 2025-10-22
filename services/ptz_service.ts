@@ -187,8 +187,8 @@ class PTZService extends SoapService {
             EFlip : false,
             Reverse : false,
             GetCompatibleConfigurations : false,
-            MoveStatus : false,
-            StatusPosition : false
+            MoveStatus : true,
+            StatusPosition : true
           }
         }
       };
@@ -231,14 +231,29 @@ class PTZService extends SoapService {
 
     port.GetStatus = (arg) => {
       // ToDo. Check token and return a valid response or an error reponse
-
+      console.log('Ptz status called')
       var now = new Date();
       var utc = now.getUTCFullYear() + '-' + this.leftPad((now.getUTCMonth()+1),2) + '-' + this.leftPad(now.getUTCDate(),2) + 'T'
             + this.leftPad(now.getUTCHours(),2) + ':' + this.leftPad(now.getUTCMinutes(),2) + ':' + this.leftPad(now.getUTCSeconds(),2) + 'Z';
 
+      
       var GetStatusResponse = { 
-	PTZStatus: {
-	  UtcTime: utc
+        PTZStatus: {
+          // Position: {
+          //   PanTilt: {
+          //     x: 0.6,
+          //     y: 0.6
+          //   },
+          //   Zoom: {
+          //     x: 0.6,
+          //   }
+          // },
+          // MoveStatus: {
+          //   PanTilt: "MOVING", // or "IDLE", "MOVING", "UNKNOWN"
+          //   Zoom: "MOVING" // or "IDLE", "MOVING", "UNKNOWN"
+          // },
+          UtcTime: utc,
+          ...this.ptz_driver.unrealController.ptzStatus
         }
       };
       return GetStatusResponse;

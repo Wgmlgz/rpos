@@ -18,3 +18,21 @@ export type PtzCommand =
   | { type: 'unknown'; raw: string };
 
 
+
+
+export type MoveStatusEnum = "IDLE" | "MOVING" | "UNKNOWN"
+export type PtzStatus = {
+  Position: {
+    PanTilt: {
+      x: number,
+      y: number
+    },
+    Zoom: {
+      x: number,
+    }
+  },
+  MoveStatus: {
+    PanTilt: MoveStatusEnum,
+    Zoom: MoveStatusEnum
+  }
+}
