@@ -11,12 +11,12 @@ var utils = Utils.utils;
 class Camera {
   options = {
     resolutions: <Resolution[]>[
-      { Width: 640, Height: 480 },
-      { Width: 800, Height: 600 },
-      { Width: 1024, Height: 768 },
-      { Width: 1280, Height: 1024 },
-      { Width: 1280, Height: 720 },
-      { Width: 1640, Height: 1232 },
+      // { Width: 640, Height: 480 },
+      // { Width: 800, Height: 600 },
+      // { Width: 1024, Height: 768 },
+      // { Width: 1280, Height: 1024 },
+      // { Width: 1280, Height: 720 },
+      // { Width: 1640, Height: 1232 },
       { Width: 1920, Height: 1080 }
     ],
     framerates: [2, 5, 10, 15, 25, 30],
@@ -36,7 +36,7 @@ class Camera {
 
   settings: CameraSettingsBase = {
     forceGop: true,
-    resolution: <Resolution>{ Width: 1280, Height: 720 },
+    resolution: <Resolution>{ Width: 1920, Height: 1080 },
     framerate: 25,
   }
   
