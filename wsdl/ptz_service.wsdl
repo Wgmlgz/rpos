@@ -8,7 +8,7 @@
   </wsdl:types>
   <wsdl:service name="PTZService">
     <wsdl:port name="PTZ" binding="i0:PTZBinding">
-      <soap:address location="http://localhost:8000/onvif/ptz_service"/>
+      <soap:address location="http://localhost:8000/onvif/PTZ"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>

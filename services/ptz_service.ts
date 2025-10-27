@@ -28,7 +28,7 @@ class PTZService extends SoapService {
     this.ptz_driver = ptz_driver;
 
     this.serviceOptions = {
-      path: '/onvif/ptz_service',
+      path: '/onvif/PTZ',
       services: this.ptz_service,
       xml: fs.readFileSync('./wsdl/ptz_service.wsdl', 'utf8'),
       wsdlPath: 'wsdl/ptz_service.wsdl',
@@ -161,6 +161,26 @@ class PTZService extends SoapService {
       DefaultRelativeZoomTranslationSpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/TranslationGenericSpace',
       DefaultContinuousPanTiltVelocitySpace : 'http://www.onvif.org/ver10/tptz/PanTiltSpaces/VelocityGenericSpace',
       DefaultContinuousZoomVelocitySpace : 'http://www.onvif.org/ver10/tptz/ZoomSpaces/VelocityGenericSpace',
+      PanTiltLimits: {
+        Range: {
+          XRange: {
+            Min: -1,
+            Max: 1,
+          },
+          YRange: {
+            Min: -1,
+            Max: 1,
+          }
+        }
+      },
+      ZoomLimits: {
+        Range: {
+          XRange: {
+            Min: 0,
+            Max: 1,
+          },
+        }
+      },
       DefaultPTZSpeed : { 
         PanTilt : { 
           attributes : {
@@ -230,32 +250,43 @@ class PTZService extends SoapService {
     };
 
     port.GetStatus = (arg) => {
-      // ToDo. Check token and return a valid response or an error reponse
-      console.log('Ptz status called')
       var now = new Date();
       var utc = now.getUTCFullYear() + '-' + this.leftPad((now.getUTCMonth()+1),2) + '-' + this.leftPad(now.getUTCDate(),2) + 'T'
             + this.leftPad(now.getUTCHours(),2) + ':' + this.leftPad(now.getUTCMinutes(),2) + ':' + this.leftPad(now.getUTCSeconds(),2) + 'Z';
 
-      
+      // Get current PTZ values from the driver, with fallback defaults
+      const ptzStatus = this.ptz_driver.unrealController.ptzStatus;
+      const pan = (ptzStatus.Position?.PanTilt?.x) || 0.0;
+      const tilt = (ptzStatus.Position?.PanTilt?.y) || 0.0;
+      const zoom = (ptzStatus.Position?.Zoom?.x) || 0.0;
+      const panTiltStatus = ptzStatus.MoveStatus?.PanTilt || "IDLE";
+      const zoomStatus = ptzStatus.MoveStatus?.Zoom || "IDLE";
+
       var GetStatusResponse = { 
         PTZStatus: {
-          // Position: {
-          //   PanTilt: {
-          //     x: 0.6,
-          //     y: 0.6
-          //   },
-          //   Zoom: {
-          //     x: 0.6,
-          //   }
-          // },
-          // MoveStatus: {
-          //   PanTilt: "MOVING", // or "IDLE", "MOVING", "UNKNOWN"
-          //   Zoom: "MOVING" // or "IDLE", "MOVING", "UNKNOWN"
-          // },
-          UtcTime: utc,
-          ...this.ptz_driver.unrealController.ptzStatus
+          Position: {
+            PanTilt: {
+              attributes: {
+                x: pan.toFixed(6), // Convert to string with 6 decimal places
+                y: tilt.toFixed(6),
+                space: "http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace"
+              }
+            },
+            Zoom: {
+              attributes: {
+                x: zoom.toFixed(6),
+                space: "http://www.onvif.org/ver10/tptz/ZoomSpaces/PositionGenericSpace"
+              }
+            }
+          },
+          MoveStatus: {
+            PanTilt: panTiltStatus,
+            Zoom: zoomStatus
+          },
+          UtcTime: utc
         }
       };
+
       return GetStatusResponse;
     };
 

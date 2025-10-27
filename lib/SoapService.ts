@@ -70,7 +70,7 @@ class SoapService {
     this.serviceInstance = soap.listen(this.webserver, this.serviceOptions);
 
     this.serviceInstance.on("request", (request: any, methodName: string) => {
-      utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
+      // utils.log.debug('%s received request %s', (<TypeConstructor>this.constructor).name, methodName);
 
       // Use the '=>' notation so 'this' refers to the class we are in
       // ONVIF allows GetSystemDateAndTime to be sent with no authenticaton header

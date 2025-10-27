@@ -12,16 +12,16 @@ class UnrealController {
   ptzStatus: PtzStatus = {
     Position: {
       PanTilt: {
-        x: 0,
-        y: 0
+        x: 1,
+        y: 1
       },
       Zoom: {
-        x: 0
+        x: 1
       }
     },
     MoveStatus: {
-      PanTilt: 'MOVING',
-      Zoom: 'MOVING'
+      PanTilt: 'IDLE',
+      Zoom: 'IDLE'
     }
   };
 
