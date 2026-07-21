@@ -1,0 +1,31 @@
+{
+  "NetworkAdapters": ["eth0", "wlan0", "en0"],
+  "IpAddress": "127.0.0.1",
+  "ServicePort": 8081,
+  "Username": "admin",
+  "Password": "admin",
+  "CameraType": "testsrc",
+  "CameraDevice": "",
+  "RTSPAddress": "",
+  "RTSPPort": 8554,
+  "RTSPName": "cam/realmonitor",
+  "MulticastEnabled": false,
+  "RTSPMulticastName": "",
+  "MulticastAddress": "224.0.0.1",
+  "MulticastPort": "10001",
+  "RTSPServer": 0,
+  "PTZDriver": "rposascii-state",
+  "PTZDriverComment": "In-process immediate PTZ state; no Unreal/socket.io server.",
+  "PTZOutput": "none",
+  "PTZSerialPort": "",
+  "PTZSerialPortSettings": { "baudRate": 2400, "dataBits": 8, "parity": "none", "stopBits": 1 },
+  "PTZOutputURL": "",
+  "PTZCameraAddress": 1,
+  "DeviceInformation": {
+    "Manufacturer": "RPOS",
+    "Model": "Virtual PTZ State",
+    "HardwareId": ""
+  },
+  "logLevel": 3,
+  "logSoapCalls": false
+}

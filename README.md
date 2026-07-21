@@ -1,5 +1,23 @@
 # rpos
 
+## Local ONVIF PTZ state (no Unreal)
+
+Set `"PTZDriver": "rposascii-state"` to expose the normal ONVIF PTZ API while
+keeping state inside RPOS. `AbsoluteMove` sets the advertised normalized
+position immediately, `RelativeMove` adds to it, and each `ContinuousMove`
+advances it by a small fixed step. `GetStatus` therefore returns the latest
+position with `IDLE` move status. This mode starts no socket.io/Unreal service.
+
+Use [rposConfig.sample-rposascii-state.json](rposConfig.sample-rposascii-state.json)
+as the starting config. The existing `rposascii` mode remains Unreal-backed.
+
+## ONVIF path compatibility
+
+RPOS accepts both its historical service paths and the short paths used by
+Dronolovka: `/onvif/device` and `/onvif/device_service`, `/onvif/media` and
+`/onvif/media_service`, `/onvif/imaging` and `/onvif/imaging_service`, plus
+`/onvif/PTZ`, `/onvif/ptz`, and `/onvif/ptz_service`.
+
 Node.js based ONVIF Camera/NVT software that turns a Raspberry Pi, Windows, Linux or Mac computer into an ONVIF Camera and RTSP Server. It implements the key parts of Profile S and Profile T (http://www.onvif.org). It has special support for the Raspberry Pi Camera and Pimoroni Pan-Tilt HAT.
 
 RPOS won an award in the 2018 ONVIF Open Source Challenge competition.

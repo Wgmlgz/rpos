@@ -233,6 +233,15 @@ class PTZService extends SoapService {
       return GetConfigurationsResponse;
     };
 
+    // Dronolovka sends this while it initializes the PTZ profile. The virtual
+    // camera intentionally keeps one fixed configuration/range set, but ONVIF
+    // requires the operation to succeed rather than returning an unimplemented
+    // SOAP fault.
+    port.SetConfiguration = (args) => {
+      var SetConfigurationResponse = { };
+      return SetConfigurationResponse;
+    };
+
 //    port.GetCompatibleConfigurations = (args) => {
 //      var GetCompatibleConfigurationsResponse = { };
 //      return GetCompatibleConfigurationsResponse;
@@ -255,7 +264,7 @@ class PTZService extends SoapService {
             + this.leftPad(now.getUTCHours(),2) + ':' + this.leftPad(now.getUTCMinutes(),2) + ':' + this.leftPad(now.getUTCSeconds(),2) + 'Z';
 
       // Get current PTZ values from the driver, with fallback defaults
-      const ptzStatus = this.ptz_driver.unrealController.ptzStatus;
+      const ptzStatus = this.ptz_driver.ptzController?.ptzStatus;
       const pan = (ptzStatus.Position?.PanTilt?.x) || 0.0;
       const tilt = (ptzStatus.Position?.PanTilt?.y) || 0.0;
       const zoom = (ptzStatus.Position?.Zoom?.x) || 0.0;

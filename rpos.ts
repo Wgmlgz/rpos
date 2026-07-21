@@ -115,6 +115,32 @@ for (var i in config.DeviceInformation) {
 
 let webserver = express();
 let httpserver = http.createServer(webserver);
+
+// Dronolovka starts ONVIF discovery at the short standard paths, while RPOS
+// historically advertised service-specific paths. Accept both forms before
+// Express and node-soap inspect the request.
+const onvifPathAliases: { [path: string]: string } = {
+  '/onvif/device': '/onvif/device_service',
+  '/onvif/device_service': '/onvif/device_service',
+  '/onvif/media': '/onvif/media_service',
+  '/onvif/media_service': '/onvif/media_service',
+  '/onvif/imaging': '/onvif/imaging',
+  '/onvif/imaging_service': '/onvif/imaging',
+  '/onvif/PTZ': '/onvif/PTZ',
+  '/onvif/ptz': '/onvif/PTZ',
+  '/onvif/ptz_service': '/onvif/PTZ'
+};
+
+const normalizeOnvifPath = (request: any) => {
+  const requestUrl = request.url || '';
+  const separator = requestUrl.search(/[?#]/);
+  const pathname = separator === -1 ? requestUrl : requestUrl.slice(0, separator);
+  const replacement = onvifPathAliases[pathname];
+  if (replacement) {
+    request.url = replacement + requestUrl.slice(pathname.length);
+  }
+};
+
 httpserver.listen(config.ServicePort);
 
 let ptz_driver = new PTZDriver(config);
@@ -125,6 +151,21 @@ let ptz_service = new PTZService(config, httpserver, ptz_driver.process_ptz_comm
 let imaging_service = new ImagingService(config, httpserver, ptz_driver.process_ptz_command);
 let media_service = new MediaService(config, httpserver, camera, ptz_service); // note ptz_service dependency
 let discovery_service = new DiscoveryService(config);
+
+// node-soap wraps all existing request listeners every time a service starts.
+// Install this only after all four SOAP services are ready so it stays outside
+// those wrappers and canonicalizes the URL before any SOAP path comparison.
+let startedOnvifServices = 0;
+const onvifServices = [device_service, media_service, ptz_service, imaging_service];
+for (const onvifService of onvifServices) {
+  onvifService.onStarted(() => {
+    startedOnvifServices += 1;
+    if (startedOnvifServices === onvifServices.length) {
+      httpserver.prependListener('request', normalizeOnvifPath);
+    }
+    return {};
+  });
+}
 
 device_service.start();
 media_service.start();

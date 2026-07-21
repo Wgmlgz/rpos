@@ -6,6 +6,8 @@ import net = require('net');
 import { setImmediate } from "timers";
 import VirtualPtzDriver = require("./VirtualPtzDriver");
 import UnrealController = require("./NDIPtzController");
+import LocalPtzStateController = require("./LocalPtzStateController");
+import { PtzCommand, PtzStatus } from "./ptzTypes";
 import events = require("events");
 
 /*
@@ -60,6 +62,9 @@ RPOS ASCII Output Format
   Warning. This is the internal RPOS API which has been stable for some time, but may change with future ONVIF releases
   Config settings
       PTZDriver: "rposascii"
+
+  PTZDriver: "rposascii-state" keeps the same API but applies commands to an
+  in-process state store. It does not start or require Unreal/socket.io.
 
   Outputs are TAB separated values and end with LINE FEED (\n)
   TAB allows the use of spaces, commas and quotes in Preset Names
@@ -169,6 +174,10 @@ class PTZDriver {
   supportsGoToHome: boolean = false;
   hasFixedHomePosition: boolean = true;
   unrealController: UnrealController
+  ptzController: {
+    ptzStatus: PtzStatus;
+    handleCommand(command: PtzCommand): void | Promise<void>;
+  };
 
   constructor(config: rposConfig) {
     this.config = config;
@@ -211,10 +220,15 @@ class PTZDriver {
       this.supportsContinuousPTZ = true;
     }
 
-    if (config.PTZDriver === 'rposascii') {
+    if (config.PTZDriver === 'rposascii' || config.PTZDriver === 'rposascii-state') {
       this.rposAscii = true;
-      this.unrealController = new UnrealController();
-      this.stream = new VirtualPtzDriver((cmd) => this.unrealController.handleCommand(cmd));
+      if (config.PTZDriver === 'rposascii') {
+        this.unrealController = new UnrealController();
+        this.ptzController = this.unrealController;
+      } else {
+        this.ptzController = new LocalPtzStateController();
+      }
+      this.stream = new VirtualPtzDriver((cmd) => this.ptzController.handleCommand(cmd));
       this.supportsAbsolutePTZ = true;
       this.supportsRelativePTZ = true;
       this.supportsContinuousPTZ = true;
