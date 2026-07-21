@@ -18,6 +18,18 @@ Dronolovka: `/onvif/device` and `/onvif/device_service`, `/onvif/media` and
 `/onvif/media_service`, `/onvif/imaging` and `/onvif/imaging_service`, plus
 `/onvif/PTZ`, `/onvif/ptz`, and `/onvif/ptz_service`.
 
+## Dronolovka profiles
+
+The RPOS Taskfile owns the two Dronolovka profiles in `configs/`:
+
+```sh
+task unreal  # falseworld-unreal.json; forwards commands to Unreal/socket.io
+task state   # state-only.json; keeps immediate PTZ state in RPOS
+```
+
+The `drone-detector` Taskfile exposes the same commands as `rpos:unreal` and
+`rpos:state`.
+
 Node.js based ONVIF Camera/NVT software that turns a Raspberry Pi, Windows, Linux or Mac computer into an ONVIF Camera and RTSP Server. It implements the key parts of Profile S and Profile T (http://www.onvif.org). It has special support for the Raspberry Pi Camera and Pimoroni Pan-Tilt HAT.
 
 RPOS won an award in the 2018 ONVIF Open Source Challenge competition.

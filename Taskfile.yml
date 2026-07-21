@@ -1,0 +1,27 @@
+version: '3'
+
+vars:
+  CONFIG_UNREAL: '{{.CONFIG_UNREAL | default (printf "%s/configs/falseworld-unreal.json" .TASKFILE_DIR)}}'
+  CONFIG_STATE: '{{.CONFIG_STATE | default (printf "%s/configs/state-only.json" .TASKFILE_DIR)}}'
+
+tasks:
+  prepare:
+    desc: Install dependencies and compile RPOS.
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - npm install --ignore-scripts
+      - npx gulp
+
+  unreal:
+    desc: Run the Unreal/socket.io-backed RPOS ONVIF emulator.
+    deps: [prepare]
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - node rpos.js --config "{{.CONFIG_UNREAL}}"
+
+  state:
+    desc: Run the in-process PTZ-state RPOS ONVIF emulator (no Unreal).
+    deps: [prepare]
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - node rpos.js --config "{{.CONFIG_STATE}}"
