@@ -36,6 +36,12 @@ interface UnrealAuthoritativePtzConfig {
   PanDelayMs?: number;
   TiltDelayMs?: number;
   ZoomDelayMs?: number;
+  // Delay before ONVIF MoveStatus changes from IDLE to MOVING. This status
+  // clock is distinct from the physical pose-delay values above.
+  PanTiltStatusMovingDelayMs?: number;
+  ZoomStatusMovingDelayMs?: number;
+  // Extra time PanTilt remains MOVING after its physical target is reached.
+  PanTiltStatusSettleMs?: number;
   PanDurationSlopeMs?: number;
   TiltDurationSlopeMs?: number;
   ZoomDurationSlopeMs?: number;

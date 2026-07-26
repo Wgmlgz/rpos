@@ -85,15 +85,13 @@ class AuthoritativeUnrealPtzController {
         );
         break;
       case 'ptz':
+        this.cancelAbsoluteMotion();
         this.setContinuous('pan', command.pan, now);
         this.setContinuous('tilt', command.tilt, now);
         this.setContinuous('zoom', command.zoom, now);
         break;
     }
-    // ONVIF GetStatus can be called immediately after an accepted move. Update
-    // this synchronously; waiting for the next publish tick recreates the
-    // transient IDLE race present in the legacy Unreal-owned bridge.
-    this.updateMoveStatus();
+    this.updateMoveStatus(now);
     this.publishPose();
   }
 
@@ -113,16 +111,20 @@ class AuthoritativeUnrealPtzController {
       zoom: this.clamp(zoom, 0, 1)
     };
     this.absoluteStartedAtMs = now;
-    this.isAbsoluteMode = !this.samePose(this.absoluteStarted, this.absoluteTarget);
+    this.isAbsoluteMode = (['pan', 'tilt', 'zoom'] as AxisName[]).some(axis => this.isAbsoluteAxisActive(axis));
     this.continuousVelocity.pan = 0;
     this.continuousVelocity.tilt = 0;
     this.continuousVelocity.zoom = 0;
   }
 
   private setContinuous(axis: AxisName, requestedVelocity: number, now: number) {
-    this.isAbsoluteMode = false;
     this.continuousVelocity[axis] = this.clamp(requestedVelocity, -1, 1);
     this.lastTickMs = now;
+  }
+
+  private cancelAbsoluteMotion() {
+    this.isAbsoluteMode = false;
+    this.absoluteStartedAtMs = 0;
   }
 
   private advance(now: number) {
@@ -139,7 +141,7 @@ class AuthoritativeUnrealPtzController {
       this.advanceContinuousAxis('tilt', elapsedSeconds);
       this.advanceContinuousAxis('zoom', elapsedSeconds);
     }
-    this.updateMoveStatus();
+    this.updateMoveStatus(now);
   }
 
   private advanceContinuousAxis(axis: AxisName, elapsedSeconds: number) {
@@ -174,6 +176,7 @@ class AuthoritativeUnrealPtzController {
 
   private isAbsoluteComplete(elapsedMs: number) {
     return (['pan', 'tilt', 'zoom'] as AxisName[]).every(axis => {
+      if (!this.isAbsoluteAxisActive(axis)) return true;
       const distance = Math.abs(this.absoluteTarget[axis] - this.absoluteStarted[axis]);
       const delayMs = this.axisDelayMs(axis);
       const durationMs = this.axisDurationMs(axis, distance);
@@ -181,14 +184,46 @@ class AuthoritativeUnrealPtzController {
     });
   }
 
+  private isAbsoluteAxisActive(axis: AxisName) {
+    return Math.abs(this.absoluteTarget[axis] - this.absoluteStarted[axis]) >= 0.000001;
+  }
+
+  private isAbsoluteGroupStatusMoving(now: number, axes: AxisName[], movingDelayMs: number, settleMs: number) {
+    if (!this.absoluteStartedAtMs || !axes.some(axis => this.isAbsoluteAxisActive(axis))) return false;
+
+    const elapsedMs = Math.max(0, now - this.absoluteStartedAtMs);
+    if (elapsedMs < movingDelayMs) return false;
+
+    const physicalCompleteAtMs = Math.max(...axes
+      .filter(axis => this.isAbsoluteAxisActive(axis))
+      .map(axis => this.axisDelayMs(axis) + this.axisDurationMs(axis,
+        Math.abs(this.absoluteTarget[axis] - this.absoluteStarted[axis]))));
+    return elapsedMs < physicalCompleteAtMs + settleMs;
+  }
+
   // Exact equivalent of RposConnect.QuadEaseInOut: UE EaseInOut, exponent 2.
   private quadEaseInOut(t: number) {
     return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
   }
 
-  private updateMoveStatus() {
-    const panTiltMoving = this.isAbsoluteMode || this.continuousVelocity.pan !== 0 || this.continuousVelocity.tilt !== 0;
-    const zoomMoving = this.isAbsoluteMode || this.continuousVelocity.zoom !== 0;
+  private updateMoveStatus(now: number) {
+    // Real logs show separate PanTilt and Zoom status clocks: they report
+    // MOVING about 60 ms after a command. PanTilt remains MOVING briefly
+    // after its physical pose reaches the reported target. Zoom intentionally
+    // has no completion hold because its status can precede its quantized
+    // final position in the recorded camera telemetry.
+    const panTiltMoving = this.isAbsoluteGroupStatusMoving(
+      now,
+      ['pan', 'tilt'],
+      this.numberSetting(this.settings.PanTiltStatusMovingDelayMs, 60),
+      this.numberSetting(this.settings.PanTiltStatusSettleMs, 60))
+      || this.continuousVelocity.pan !== 0 || this.continuousVelocity.tilt !== 0;
+    const zoomMoving = this.isAbsoluteGroupStatusMoving(
+      now,
+      ['zoom'],
+      this.numberSetting(this.settings.ZoomStatusMovingDelayMs, 60),
+      0)
+      || this.continuousVelocity.zoom !== 0;
     this.ptzStatus.MoveStatus.PanTilt = panTiltMoving ? 'MOVING' : 'IDLE';
     this.ptzStatus.MoveStatus.Zoom = zoomMoving ? 'MOVING' : 'IDLE';
   }
@@ -228,12 +263,6 @@ class AuthoritativeUnrealPtzController {
 
   private currentPose(): PtzPose {
     return { pan: this.axisValue('pan'), tilt: this.axisValue('tilt'), zoom: this.axisValue('zoom') };
-  }
-
-  private samePose(left: PtzPose, right: PtzPose) {
-    return Math.abs(left.pan - right.pan) < 0.000001
-      && Math.abs(left.tilt - right.tilt) < 0.000001
-      && Math.abs(left.zoom - right.zoom) < 0.000001;
   }
 
   private setAxisValue(axis: AxisName, value: number) {
