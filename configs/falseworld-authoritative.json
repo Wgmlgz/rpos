@@ -24,8 +24,8 @@
   "UnrealAuthoritativePtz": {
     "SocketIoPort": 5666,
     "TickRateHz": 120,
-    "InitialPan": 0.5,
-    "InitialTilt": 1.0,
+    "InitialPan": 0.6444444444,
+    "InitialTilt": 0.7142857143,
     "InitialZoom": 0.0,
     "PanDelayMs": 0.0,
     "TiltDelayMs": 0.0,
@@ -42,7 +42,7 @@
     "PanDegreesAtMinusOne": 180.0,
     "PanDegreesAtPlusOne": -180.0,
     "TiltDegreesAtMinusOne": 90.0,
-    "TiltDegreesAtPlusOne": 0.0,
+    "TiltDegreesAtPlusOne": -15.0,
     "WideHorizontalFovDegrees": 57.6,
     "TeleHorizontalFovDegrees": 2.5
   },
