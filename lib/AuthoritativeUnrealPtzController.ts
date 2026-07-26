@@ -197,11 +197,11 @@ class AuthoritativeUnrealPtzController {
     const zoom = this.ptzStatus.Position.Zoom.x;
     const wideFov = this.numberSetting(this.settings.WideHorizontalFovDegrees, 57.6);
     const teleFov = this.numberSetting(this.settings.TeleHorizontalFovDegrees, 2.5);
-    // Exact RposConnect.CalcRealFov: focal length interpolates linearly, not
-    // exponentially, between the calibrated wide and tele fields of view.
-    const wideTan = Math.tan(wideFov * Math.PI / 180);
-    const teleTan = Math.tan(teleFov * Math.PI / 180);
-    const fovDegrees = wideFov / (((wideTan / teleTan - 1) * zoom) + 1);
+    // Dronolovka's CameraQ::setFromAnglesDegreesLinear interpolates the
+    // image focal length between its calibrated wide and tele endpoints.
+    // Convert that focal length back to a horizontal FOV before rendering.
+    // This intentionally gives fov(0) == wideFov and fov(1) == teleFov.
+    const fovDegrees = this.focalLengthInterpolatedFov(zoom, wideFov, teleFov);
     const packet = {
       type: 'rpos-authoritative-ptz/v1',
       sequence: ++this.sequence,
@@ -262,6 +262,15 @@ class AuthoritativeUnrealPtzController {
 
   private numberSetting(value: any, fallback: number) {
     return typeof value === 'number' && isFinite(value) ? value : fallback;
+  }
+
+  private focalLengthInterpolatedFov(zoom: number, wideFovDegrees: number, teleFovDegrees: number) {
+    const clampedZoom = this.clamp(zoom, 0, 1);
+    const radiansPerDegree = Math.PI / 180;
+    const wideTanHalfFov = Math.tan(wideFovDegrees * radiansPerDegree / 2);
+    const teleTanHalfFov = Math.tan(teleFovDegrees * radiansPerDegree / 2);
+    const inverseTanHalfFov = (1 - clampedZoom) / wideTanHalfFov + clampedZoom / teleTanHalfFov;
+    return 2 * Math.atan(1 / inverseTanHalfFov) / radiansPerDegree;
   }
 
   private clamp(value: number, min: number, max: number) {
