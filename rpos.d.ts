@@ -24,6 +24,35 @@ interface rposConfig {
   DeviceInformation: DeviceInformation;
   logLevel: number;
   logSoapCalls: Boolean;
+  UnrealAuthoritativePtz?: UnrealAuthoritativePtzConfig;
+}
+
+interface UnrealAuthoritativePtzConfig {
+  SocketIoPort?: number;
+  TickRateHz?: number;
+  InitialPan?: number;
+  InitialTilt?: number;
+  InitialZoom?: number;
+  PanDelayMs?: number;
+  TiltDelayMs?: number;
+  ZoomDelayMs?: number;
+  PanDurationSlopeMs?: number;
+  TiltDurationSlopeMs?: number;
+  ZoomDurationSlopeMs?: number;
+  PanDurationInterceptMs?: number;
+  TiltDurationInterceptMs?: number;
+  ZoomDurationInterceptMs?: number;
+  ContinuousPanUnitsPerSecond?: number;
+  ContinuousTiltUnitsPerSecond?: number;
+  ContinuousZoomUnitsPerSecond?: number;
+  // These are the original RposConnect calibration endpoints.  They map the
+  // ONVIF-normalized [-1, +1] axes to physical camera-head degrees.
+  PanDegreesAtMinusOne?: number;
+  PanDegreesAtPlusOne?: number;
+  TiltDegreesAtMinusOne?: number;
+  TiltDegreesAtPlusOne?: number;
+  WideHorizontalFovDegrees?: number;
+  TeleHorizontalFovDegrees?: number;
 }
 
 interface PTZSerialPortSettings {

@@ -7,6 +7,7 @@ import { setImmediate } from "timers";
 import VirtualPtzDriver = require("./VirtualPtzDriver");
 import UnrealController = require("./NDIPtzController");
 import LocalPtzStateController = require("./LocalPtzStateController");
+import AuthoritativeUnrealPtzController = require("./AuthoritativeUnrealPtzController");
 import { PtzCommand, PtzStatus } from "./ptzTypes";
 import events = require("events");
 
@@ -174,6 +175,7 @@ class PTZDriver {
   supportsGoToHome: boolean = false;
   hasFixedHomePosition: boolean = true;
   unrealController: UnrealController
+  authoritativeUnrealController: AuthoritativeUnrealPtzController
   ptzController: {
     ptzStatus: PtzStatus;
     handleCommand(command: PtzCommand): void | Promise<void>;
@@ -220,11 +222,14 @@ class PTZDriver {
       this.supportsContinuousPTZ = true;
     }
 
-    if (config.PTZDriver === 'rposascii' || config.PTZDriver === 'rposascii-state') {
+    if (config.PTZDriver === 'rposascii' || config.PTZDriver === 'rposascii-state' || config.PTZDriver === 'rposascii-authoritative') {
       this.rposAscii = true;
       if (config.PTZDriver === 'rposascii') {
         this.unrealController = new UnrealController();
         this.ptzController = this.unrealController;
+      } else if (config.PTZDriver === 'rposascii-authoritative') {
+        this.authoritativeUnrealController = new AuthoritativeUnrealPtzController(config);
+        this.ptzController = this.authoritativeUnrealController;
       } else {
         this.ptzController = new LocalPtzStateController();
       }

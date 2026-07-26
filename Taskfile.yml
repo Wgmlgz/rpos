@@ -3,6 +3,7 @@ version: '3'
 vars:
   CONFIG_UNREAL: '{{.CONFIG_UNREAL | default (printf "%s/configs/falseworld-unreal.json" .TASKFILE_DIR)}}'
   CONFIG_STATE: '{{.CONFIG_STATE | default (printf "%s/configs/state-only.json" .TASKFILE_DIR)}}'
+  CONFIG_AUTHORITATIVE: '{{.CONFIG_AUTHORITATIVE | default (printf "%s/configs/falseworld-authoritative.json" .TASKFILE_DIR)}}'
 
 tasks:
   prepare:
@@ -25,3 +26,19 @@ tasks:
     dir: '{{.TASKFILE_DIR}}'
     cmds:
       - node rpos.js --config "{{.CONFIG_STATE}}"
+
+  authoritative:
+    desc: Run RPOS as the authoritative PTZ model and publish poses to Unreal over Socket.IO.
+    deps: [prepare]
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - node rpos.js --config "{{.CONFIG_AUTHORITATIVE}}"
+
+  stop:
+    desc: Stop listeners on RPOS's ONVIF and Socket.IO ports.
+    dir: '{{.TASKFILE_DIR}}'
+    cmds:
+      - cmd: powershell -NoProfile -Command '$ids = Get-NetTCPConnection -LocalPort 80,5666 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($ids) { Stop-Process -Id $ids -Force }'
+        platforms: [windows]
+      - cmd: for port in 80 5666; do lsof -tiTCP:$port -sTCP:LISTEN 2>/dev/null | xargs kill 2>/dev/null || true; done
+        platforms: [linux, darwin]

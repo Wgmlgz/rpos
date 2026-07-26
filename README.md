@@ -1,5 +1,29 @@
 # rpos
 
+## RPOS-authoritative Unreal PTZ
+
+Set `"PTZDriver": "rposascii-authoritative"` to make RPOS own PTZ motion,
+ONVIF status, zoom/FOV calibration, and the moving state. It publishes the
+resulting pose to FalseWorld over Socket.IO; the native Unreal receiver renders
+that pose directly into the RTSP capture and does not require a Blueprint change.
+
+Use [configs/falseworld-authoritative.json](configs/falseworld-authoritative.json)
+and start it with:
+
+```sh
+task authoritative
+```
+
+To stop a background RPOS instance for that profile, including both its ONVIF
+and Socket.IO listeners, run:
+
+```sh
+task stop
+```
+
+The calibration values in that profile are simulator-side values. They can be
+tuned against `imfinnabridge/ptz_logs` without changing Dronolovka.
+
 ## Local ONVIF PTZ state (no Unreal)
 
 Set `"PTZDriver": "rposascii-state"` to expose the normal ONVIF PTZ API while

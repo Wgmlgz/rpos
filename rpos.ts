@@ -141,7 +141,9 @@ const normalizeOnvifPath = (request: any) => {
   }
 };
 
-httpserver.listen(config.ServicePort);
+// Node 26 on Windows can create an IPv6-only default listener. Dronolovka is
+// an IPv4 peer, so bind the simulator's ONVIF service explicitly on IPv4.
+httpserver.listen(config.ServicePort, '0.0.0.0');
 
 let ptz_driver = new PTZDriver(config);
 
